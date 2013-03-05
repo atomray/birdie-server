@@ -25,10 +25,11 @@ class BirdIdentService
     fileParams.get("file") match {
       case Some(file) =>
         println(s"Got a file! ${file.size} bytes")
-        Ok(file.get(), Map(
-          "Content-Type"        -> (file.contentType.getOrElse("application/octet-stream")),
-          "Content-Disposition" -> ("attachment; filename=\"" + file.name + "\"")
-        ))
+//        Ok(file.get(), Map(
+//          "Content-Type"        -> (file.contentType.getOrElse("application/octet-stream")),
+//          "Content-Disposition" -> ("attachment; filename=\"" + file.name + "\"")
+//        ))
+        Ok(<p>Thanks, come again dude</p>)
 
       case None =>
         BadRequest(displayPage(
