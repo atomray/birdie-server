@@ -4,38 +4,33 @@ import org.scalatra._
 import scalate.ScalateSupport
 import servlet.{MultipartConfig, SizeConstraintExceededException, FileUploadSupport}
 import xml.Node
+import org.json4s.{DefaultFormats, Formats}
+import org.scalatra.json._
 
 @javax.servlet.annotation.MultipartConfig
 class BirdIdentService 
 	extends ScalatraServlet
 	with FileUploadSupport
-	with FlashMapSupport {
+	with JacksonJsonSupport {
 
-  configureMultipartHandling(MultipartConfig(maxFileSize = Some(30*1024*1024)))
+  protected implicit val jsonFormats: Formats = DefaultFormats
 
-  def displayPage(content: Seq[Node]) = content
-
+  before() {
+    contentType = formats("json")
+  }
+  
   error {
     case e: SizeConstraintExceededException =>
-      RequestEntityTooLarge(displayPage(
-        <p>The file you uploaded exceeded the 30 MB limit.</p>))
+      RequestEntityTooLarge("The file you uploaded exceeded the unlimited limit. Somehow.")
   }
   
   post("/") {
     fileParams.get("file") match {
       case Some(file) =>
-        println(s"Got a file! ${file.size} bytes")
-//        Ok(file.get(), Map(
-//          "Content-Type"        -> (file.contentType.getOrElse("application/octet-stream")),
-//          "Content-Disposition" -> ("attachment; filename=\"" + file.name + "\"")
-//        ))
-        Ok(<p>Thanks, come again dude</p>)
+        Ok(new SuccessfulBirdIdentificationResponse("Bluejay", file.getSize))
 
       case None =>
-        BadRequest(displayPage(
-          <p>
-            Hey! You forgot to select a file. Dick.
-          </p>))
+        BadRequest("Hey! You forgot to select a file. Dick.")
     }
   }
 }
