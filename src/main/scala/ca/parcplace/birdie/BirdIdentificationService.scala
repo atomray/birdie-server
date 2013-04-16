@@ -11,6 +11,9 @@ import com.musicg.fingerprint.FingerprintManager
 import com.musicg.wave.Wave
 import java.io.InputStream
 import com.musicg.fingerprint.FingerprintSimilarityComputer
+import java.io.File
+import java.io.FileOutputStream
+import com.musicg.wave.WaveFileManager
 
 @javax.servlet.annotation.MultipartConfig
 class BirdIdentService
@@ -33,7 +36,7 @@ class BirdIdentService
     fileParams.get("file") match {
       case Some(file) => {
         println("received file: " + file)
-        Ok(BirdIdentService.identify(file.getInputStream))
+        Ok(MockBirdIdentService.identify(file.getInputStream))
       }
 
       case None =>
@@ -42,12 +45,31 @@ class BirdIdentService
   }
 }
 
+object MockBirdIdentService { 
+  val birdies = List(new SuccessfulBirdIdentificationResponse("Phoebastria","immutabilis", "Laysan Albatross", "none"),
+      new SuccessfulBirdIdentificationResponse("Setophaga","virens", "Black-throated Green Warbler", "none"),
+      new SuccessfulBirdIdentificationResponse("Glaucidium","hardyi", "Amazonian Pygmy Owl", "none"))
+  
+  def identify(inStream: InputStream): BirdIdentificationResponse = {
+    val index = Random.nextInt(birdies.length)
+    birdies(index)
+  }  
+}
+
 object BirdIdentService {
   
   var previousPrint: Array[Byte] = null
   
   def identify(inStream: InputStream): BirdIdentificationResponse = {
     val wave = new Wave(inStream)
+    println("wave created - format: " + wave.getWaveHeader().getAudioFormat())
+    println("wave created - bits per sample: " + wave.getWaveHeader().getBitsPerSample())
+    println("wave created - sample rate: " + wave.getWaveHeader().getSampleRate())
+    println("wave created - channels: " + wave.getWaveHeader().getChannels())
+    println("wave created - block align: " + wave.getWaveHeader().getBlockAlign());
+    println("wave created - byte rate: " + wave.getWaveHeader().getByteRate());
+
+    new WaveFileManager(wave).saveWaveAsFile("/tmp/test.wav")
     
     val fileManager = new FingerprintManager()
     val fingerPrint = fileManager.extractFingerprint(wave)
